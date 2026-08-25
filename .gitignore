@@ -1,0 +1,15 @@
+/target/
+/.direnv/
+/.vendor/
+/.zed/
+/.zed-pack/
+
+# Only SOPS ciphertext belongs in Git.
+/env/dec/*.env
+/env/dec/**/*.env
+/.age/
+/age-key.txt
+/keys.txt
+.env
+.env.*
+!.env.example

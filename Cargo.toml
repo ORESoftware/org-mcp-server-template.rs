@@ -1,0 +1,23 @@
+[package]
+name = "ore-org-mcp-server"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+license = "MIT"
+description = "Hardened read-only MCP server for one GitHub organization"
+publish = false
+
+[[bin]]
+name = "org-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+ore-mcp-org-server = { git = "https://github.com/ORESoftware/mcp-rust-libs", rev = "42cd61aae6908a7c587ababd954bcd8a05520d92" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

@@ -1,0 +1,121 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Verify locked dependency graph
+        run: cargo metadata --locked --format-version 1 >/dev/null
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Lint
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --locked --all-targets
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --locked --no-deps
+      - name: Audit dependencies
+        run: |
+          cargo install cargo-audit --locked --version 0.22.2
+          cargo audit --deny warnings
+      - name: Verify encrypted-environment policy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          tracked_plaintext = subprocess.run(
+              ["git", "ls-files", ".env", ".env.*", "env/dec/*.env"],
+              check=True,
+              capture_output=True,
+              text=True,
+          ).stdout.strip()
+          assert not tracked_plaintext, tracked_plaintext
+
+          encrypted_files = sorted(Path("env/enc").glob("*.env.enc"))
+          assert encrypted_files, "at least one encrypted environment fixture is required"
+          for path in encrypted_files:
+              values = {}
+              for line in path.read_text().splitlines():
+                  if line and "=" in line:
+                      key, value = line.split("=", 1)
+                      values[key] = value
+              assert values.get("sops_mac", "").startswith("ENC[")
+              assert values.get("sops_age__list_0__map_enc", "").startswith(
+                  "-----BEGIN AGE ENCRYPTED FILE-----"
+              )
+              for key, value in values.items():
+                  if not key.startswith("sops_"):
+                      assert value.startswith("ENC["), f"plaintext value in {path}: {key}"
+          PY
+      - name: Smoke-test JSON-RPC stdio isolation
+        run: |
+          cargo build --locked --bin org-mcp-server
+          python - <<'PY'
+          import json
+          import subprocess
+
+          messages = [
+              {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "initialize",
+                  "params": {
+                      "protocolVersion": "2025-03-26",
+                      "capabilities": {},
+                      "clientInfo": {"name": "ci-smoke", "version": "0.1.0"},
+                  },
+              },
+              {"jsonrpc": "2.0", "method": "notifications/initialized"},
+              {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
+          ]
+          payload = "".join(json.dumps(message) + "\n" for message in messages)
+          process = subprocess.run(
+              ["target/debug/org-mcp-server"],
+              input=payload,
+              capture_output=True,
+              text=True,
+              timeout=15,
+              check=True,
+          )
+          stdout_frames = [json.loads(line) for line in process.stdout.splitlines() if line]
+          assert [frame.get("id") for frame in stdout_frames] == [1, 2]
+          tools = {tool["name"] for tool in stdout_frames[1]["result"]["tools"]}
+          assert tools == {
+              "environment_policy",
+              "org_identity",
+              "security_baseline",
+              "shared_auth_policy",
+              "telemetry_status",
+              "zed_dependency_graph",
+          }
+          for line in process.stderr.splitlines():
+              if line:
+                  json.loads(line)
+          PY
+      - name: Verify generated state is unchanged
+        run: git diff --exit-code
