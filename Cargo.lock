@@ -941,7 +941,7 @@ dependencies = [
 [[package]]
 name = "ore-mcp-bootstrap"
 version = "0.1.0"
-source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=42cd61aae6908a7c587ababd954bcd8a05520d92#42cd61aae6908a7c587ababd954bcd8a05520d92"
+source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=cf4523ec14fcca969ce2570f6a659c53e049773d#cf4523ec14fcca969ce2570f6a659c53e049773d"
 dependencies = [
  "ore-mcp-safety",
 ]
@@ -949,25 +949,29 @@ dependencies = [
 [[package]]
 name = "ore-mcp-org-server"
 version = "0.1.0"
-source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=42cd61aae6908a7c587ababd954bcd8a05520d92#42cd61aae6908a7c587ababd954bcd8a05520d92"
+source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=cf4523ec14fcca969ce2570f6a659c53e049773d#cf4523ec14fcca969ce2570f6a659c53e049773d"
 dependencies = [
  "ore-mcp-bootstrap",
  "ore-mcp-zed-graph",
  "ores-mcp-server-core-libs",
  "rmcp 2.2.0",
+ "schemars",
+ "serde",
  "serde_json",
+ "tokio",
+ "tokio-util",
  "tracing",
 ]
 
 [[package]]
 name = "ore-mcp-safety"
 version = "0.1.0"
-source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=42cd61aae6908a7c587ababd954bcd8a05520d92#42cd61aae6908a7c587ababd954bcd8a05520d92"
+source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=cf4523ec14fcca969ce2570f6a659c53e049773d#cf4523ec14fcca969ce2570f6a659c53e049773d"
 
 [[package]]
 name = "ore-mcp-zed-graph"
 version = "0.1.0"
-source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=42cd61aae6908a7c587ababd954bcd8a05520d92#42cd61aae6908a7c587ababd954bcd8a05520d92"
+source = "git+https://github.com/ORESoftware/mcp-rust-libs?rev=cf4523ec14fcca969ce2570f6a659c53e049773d#cf4523ec14fcca969ce2570f6a659c53e049773d"
 dependencies = [
  "serde_json",
 ]

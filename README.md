@@ -20,7 +20,7 @@ The server is deliberately read-only and exposes six no-argument tools:
   secret-handling guarantees.
 
 `ORESoftware/mcp-rust-libs` is pinned to immutable revision
-`42cd61aae6908a7c587ababd954bcd8a05520d92`. Its organization-server crate pins
+`cf4523ec14fcca969ce2570f6a659c53e049773d`. Its organization-server crate pins
 `ores-otel/ores-mcp-server-core-libs.rs` to reviewed revision
 `e559a76f869c2c2d9bf939b510d358a3924abd81` for JSON logs on stderr plus OTLP
 traces, metrics, and logs. MCP protocol frames own stdout.

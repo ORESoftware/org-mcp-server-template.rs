@@ -12,7 +12,7 @@ name = "org-mcp-server"
 path = "src/main.rs"
 
 [dependencies]
-ore-mcp-org-server = { git = "https://github.com/ORESoftware/mcp-rust-libs", rev = "42cd61aae6908a7c587ababd954bcd8a05520d92" }
+ore-mcp-org-server = { git = "https://github.com/ORESoftware/mcp-rust-libs", rev = "cf4523ec14fcca969ce2570f6a659c53e049773d" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [lints.rust]
