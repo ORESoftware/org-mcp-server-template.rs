@@ -12,10 +12,12 @@ check:
 
 run profile="dev":
     @test -f "env/enc/{{ profile }}.env.enc"
+    @ores-sops ensure-dec
     @sops exec-env --same-process --input-type dotenv "env/enc/{{ profile }}.env.enc" 'cargo run --locked --release'
 
 test-with-env profile="dev":
     @test -f "env/enc/{{ profile }}.env.enc"
+    @ores-sops ensure-dec
     @sops exec-env --input-type dotenv "env/enc/{{ profile }}.env.enc" 'cargo test --locked --all-targets'
 
 decrypt profile="dev":
