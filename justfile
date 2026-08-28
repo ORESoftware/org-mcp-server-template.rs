@@ -22,7 +22,7 @@ test-with-env profile="dev":
 
 decrypt profile="dev":
     @test -f "env/enc/{{ profile }}.env.enc"
-    @install -d -m 700 env/dec
+    @ores-sops ensure-dec
     @umask 077; sops --decrypt --input-type dotenv --output-type dotenv --output "env/dec/{{ profile }}.env" "env/enc/{{ profile }}.env.enc"
     @chmod 600 "env/dec/{{ profile }}.env"
     @printf '%s\n' "decrypted env/dec/{{ profile }}.env (ignored; remove it when finished)"
