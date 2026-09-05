@@ -13,3 +13,20 @@
 .env
 .env.*
 !.env.example
+
+# BEGIN ores-sops dotenv policy — see env/README.md
+.env
+.env.*
+!.env.example
+*.env
+**/*.env
+env/dec
+/env/dec/
+/env/enc/*
+!/env/enc/dev.env.enc
+!/env/enc/prod.env.enc
+*.agekey
+*.age-key
+keys.txt
+sops-private*.txt
+# END ores-sops dotenv policy

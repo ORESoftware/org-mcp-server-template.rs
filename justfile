@@ -1,45 +1,70 @@
+# org-mcp-server — task runner. Run `just` to see everything.
+#
+# Secrets: env/enc/*.env.enc (sops + age). See env/README.md and AGENTS.md.
+
 set shell := ["bash", "-euo", "pipefail", "-c"]
+set dotenv-load := false
+
+import '.just/env.just'
 
 default:
     @just --list
+
+alias use := env-use
+alias edit := env-edit
+alias audit := env-check
+alias env-audit := env-check
+
+[group('env')]
+env-use name: (env-decrypt name)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ justfile_directory() }}"
+    target="env/dec/{{ name }}.env"
+    [[ -f $target ]] || { echo "missing $target" >&2; exit 1; }
+    if [[ -e .env || -L .env ]]; then
+      if [[ -L .env ]] && [[ $(readlink .env) == env/dec/*.env ]]; then
+        rm -f .env
+      else
+        echo "refusing to replace unmanaged .env (not a symlink into env/dec/)" >&2
+        exit 1
+      fi
+    fi
+    ln -s "$target" .env
+    echo ".env -> $target"
+
+[group('env')]
+env-unuse:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "{{ justfile_directory() }}"
+    if [[ -L .env ]] && [[ $(readlink .env) == env/dec/*.env ]]; then
+      rm -f .env; echo "removed .env symlink"
+    elif [[ -e .env ]]; then
+      echo "refusing to remove unmanaged .env" >&2; exit 1
+    else
+      echo "no .env to remove"
+    fi
 
 check:
     cargo fmt --all -- --check
     cargo clippy --locked --all-targets -- -D warnings
     cargo test --locked --all-targets
     cargo audit --deny warnings
-    just env-policy
+    just env-check
 
 run profile="dev":
-    @test -f "env/enc/{{ profile }}.env.enc"
-    @ores-sops ensure-dec
-    @sops exec-env --same-process --input-type dotenv "env/enc/{{ profile }}.env.enc" 'cargo run --locked --release'
+    just env-run {{ profile }} cargo run --locked --release
+
+# --- compatibility with the recipe names the previous root justfile exposed (kept from main) ---
+# `ores-sops ensure-dec` (main) and `_env-dec` (.just/env.just) enforce the same env/dec contract;
+# these wrappers route the old names through the .just/env.just implementations.
 
 test-with-env profile="dev":
-    @test -f "env/enc/{{ profile }}.env.enc"
-    @ores-sops ensure-dec
-    @sops exec-env --input-type dotenv "env/enc/{{ profile }}.env.enc" 'cargo test --locked --all-targets'
+    just env-run {{ profile }} cargo test --locked --all-targets
 
-decrypt profile="dev":
-    @test -f "env/enc/{{ profile }}.env.enc"
-    @ores-sops ensure-dec
-    @umask 077; sops --decrypt --input-type dotenv --output-type dotenv --output "env/dec/{{ profile }}.env" "env/enc/{{ profile }}.env.enc"
-    @chmod 600 "env/dec/{{ profile }}.env"
-    @printf '%s\n' "decrypted env/dec/{{ profile }}.env (ignored; remove it when finished)"
+decrypt profile="dev": (env-decrypt profile)
 
-encrypt profile="dev":
-    @test -f "env/dec/{{ profile }}.env"
-    @test -f .sops.yaml
-    @sops --encrypt --input-type dotenv --output-type dotenv --output "env/enc/{{ profile }}.env.enc" "env/dec/{{ profile }}.env"
-    @printf '%s\n' "encrypted env/enc/{{ profile }}.env.enc"
+encrypt profile="dev": (env-encrypt profile)
 
-edit profile="dev":
-    @test -f "env/enc/{{ profile }}.env.enc"
-    @sops "env/enc/{{ profile }}.env.enc"
-
-env-policy:
-    @test -f .sops.yaml
-    @test -n "$(find env/enc -mindepth 1 -maxdepth 1 -type f -name '*.env.enc' -print -quit)"
-    @test -z "$(git ls-files 'env/dec/*.env' '.env' '.env.*')"
-    @for file in env/enc/*.env.enc; do sops filestatus --input-type dotenv "$file" | grep -q '"encrypted"[[:space:]]*:[[:space:]]*true'; done
-    @printf '%s\n' 'environment policy verified'
+alias env-policy := env-check
