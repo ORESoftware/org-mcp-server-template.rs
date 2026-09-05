@@ -36,6 +36,8 @@ _env-dec:
     path="{{ _dec }}"
     [[ ! -L "$path" ]] || { echo "env/dec must not be a symlink" >&2; exit 1; }
     [[ ! -e "$path" || -d "$path" ]] || { echo "env/dec must be a directory" >&2; exit 1; }
+    # Fleet tool first (same contract as `ores-sops ensure-dec` on main); local fallback keeps fresh clones working.
+    if command -v ores-sops >/dev/null 2>&1; then ores-sops ensure-dec; fi
     mkdir -p "$path"
     chmod 700 "$path"
 

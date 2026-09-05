@@ -55,3 +55,16 @@ check:
 
 run profile="dev":
     just env-run {{ profile }} cargo run --locked --release
+
+# --- compatibility with the recipe names the previous root justfile exposed (kept from main) ---
+# `ores-sops ensure-dec` (main) and `_env-dec` (.just/env.just) enforce the same env/dec contract;
+# these wrappers route the old names through the .just/env.just implementations.
+
+test-with-env profile="dev":
+    just env-run {{ profile }} cargo test --locked --all-targets
+
+decrypt profile="dev": (env-decrypt profile)
+
+encrypt profile="dev": (env-encrypt profile)
+
+alias env-policy := env-check
