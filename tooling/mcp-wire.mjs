@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { TextDecoder } from 'node:util';
+import { parseStrictJson, wireJsonPolicy, sharedMcpRevision, sharedJsonSha256 } from './mcp-shared-json.mjs';
 
 export const TOOL_MODELS = Object.freeze({
   org_identity: 'OrgIdentity',
@@ -13,15 +13,15 @@ export const TOOL_MODELS = Object.freeze({
 export const CANARY = 'MCP_CONTRACT_CANARY_NOT_A_SECRET';
 const MAX_CAPTURE = 2 * 1024 * 1024;
 const MAX_LINE = 1024 * 1024;
-const decoder = new TextDecoder('utf-8', { fatal: true });
 
 export function assertFrame(frame) {
   assert(frame && !Array.isArray(frame) && typeof frame === 'object', 'JSON-RPC object required');
   assert.equal(frame.jsonrpc, '2.0', 'stdout must contain JSON-RPC only');
   assert(Object.hasOwn(frame, 'id'), 'unexpected server notification');
+  assert(!Object.hasOwn(frame, 'method'), 'response must not contain a method');
   assert.notEqual(Object.hasOwn(frame, 'result'), Object.hasOwn(frame, 'error'), 'exactly one result or error required');
   if (Object.hasOwn(frame, 'error')) {
-    assert(Number.isInteger(frame.error?.code), 'error code required');
+    assert(Number.isSafeInteger(frame.error?.code), 'error code required');
     assert.equal(typeof frame.error?.message, 'string', 'error message required');
   }
   return frame;
@@ -37,7 +37,7 @@ export function decodeResult(frame) {
   assert.equal(typeof result.content[0].text, 'string');
   assert(Buffer.byteLength(result.content[0].text) <= 65536, 'tool output exceeds 64 KiB');
   assert(!result.content[0].text.includes(CANARY), 'input canary was disclosed');
-  const value = JSON.parse(result.content[0].text);
+  const value = parseStrictJson(result.content[0].text, { maxBytes: 65536 });
   if (Object.hasOwn(result, 'structuredContent')) {
     assert.deepEqual(result.structuredContent, value, 'text/structured output disagreement');
   }
@@ -46,7 +46,8 @@ export function decodeResult(frame) {
 
 export function assertRejected(frame) {
   assertFrame(frame);
-  assert(Object.hasOwn(frame, 'error') || frame.result?.isError === true, 'invalid call was accepted');
+  assert((Object.hasOwn(frame, 'error') && [-32601, -32602].includes(frame.error.code)) ||
+    frame.result?.isError === true, 'invalid call was accepted or failed for an unrelated reason');
   assert(!JSON.stringify(frame).includes(CANARY), 'rejection disclosed input canary');
 }
 
@@ -108,11 +109,10 @@ export class RpcProcess {
     let offset;
     while ((offset = this.buffers[channel].indexOf(10)) !== -1) {
       assert(offset <= MAX_LINE, `${channel} line bound exceeded`);
-      const line = decoder.decode(this.buffers[channel].subarray(0, offset));
+      const line = this.buffers[channel].subarray(0, offset);
       this.buffers[channel] = this.buffers[channel].subarray(offset + 1);
-      if (!line.trim()) continue;
       assert(!line.includes(CANARY), `${channel} disclosed input canary`);
-      const value = JSON.parse(line);
+      const value = parseStrictJson(line);
       if (channel === 'stderr') {
         assert(value && typeof value === 'object' && !Array.isArray(value), 'stderr logs must be JSON objects');
         continue;
@@ -193,6 +193,7 @@ export async function exerciseServer({ binary, expectedRepository, validate, val
     assertRejected(await rpc.request('tools/call', { name: '__unknown_contract_tool__', arguments: {} }));
     calls++;
     await rpc.finish();
-    return { tools: Object.keys(models).length, calls, stdoutBytes: rpc.bytes.stdout, stderrBytes: rpc.bytes.stderr };
+    return { tools: Object.keys(models).length, calls, stdoutBytes: rpc.bytes.stdout, stderrBytes: rpc.bytes.stderr,
+      wireJsonPolicy, sharedMcpRevision, sharedJsonSha256 };
   } finally { await rpc.stop(); }
 }

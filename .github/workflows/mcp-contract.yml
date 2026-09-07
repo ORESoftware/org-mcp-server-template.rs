@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ORESoftware/mcp-rust-libs
-          ref: 56d102dc0b37f2d3b4b602f6ef268945942a21a5
+          ref: 487df19ec2542616924041bc244c5660c1ed0bf4
           path: .contract-tools
           persist-credentials: false
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -38,7 +38,7 @@ jobs:
           test ! -e node_modules
           ln -s .contract-validator/node_modules node_modules
       - name: Test shared runner
-        run: node --test .contract-tools/test/org-mcp-contract.test.mjs
+        run: node --test .contract-tools/test/org-mcp-*.test.mjs
       - name: Check Rust and build actual template binary
         run: |
           cargo fmt --all -- --check
