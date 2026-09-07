@@ -25,7 +25,7 @@ try {
     rustc: execFileSync('rustc', ['--version'], { encoding: 'utf8' }).trim(),
   };
   assert.equal(toolchains.validator, 'e00f586e639e505d83ab1058248c0e15e504c15c');
-  assert.equal(toolchains.runner, '3d13363a49a55abb7fbd35f4309c7b954ff84503');
+  assert.equal(toolchains.runner, '56d102dc0b37f2d3b4b602f6ef268945942a21a5');
   const work = await mkdtemp(join(artifacts, 'run-'));
   const options = {
     typespec: join(root, 'contracts/main.tsp'),
@@ -73,8 +73,9 @@ try {
     negativeParityControls: mutations.map(([name]) => name) }, null, 2) + '\n');
   console.log('MCP org_identity peer parity, IR and compiled-binary conformance passed');
 } catch (error) {
+  const reason = error.message?.startsWith('MCP contract:') ? error.message : 'required check failed';
   await writeFile(resultPath, JSON.stringify({ schema: 'ores.mcp-tool-conformance-result/v1',
-    status: 'failed', phase, reason: error.message?.startsWith('MCP contract:') ? error.message : 'required check failed' }, null, 2) + '\n');
-  console.error(`MCP conformance failed in ${phase}; inspect the current-run artifacts`);
+    status: 'failed', phase, reason }, null, 2) + '\n');
+  console.error(`MCP conformance failed in ${phase}: ${reason}; inspect the current-run artifacts`);
   process.exitCode = 1;
 }

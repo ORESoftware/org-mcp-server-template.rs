@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ORESoftware/mcp-rust-libs
-          ref: 3d13363a49a55abb7fbd35f4309c7b954ff84503
+          ref: 56d102dc0b37f2d3b4b602f6ef268945942a21a5
           path: .contract-tools
           persist-credentials: false
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
