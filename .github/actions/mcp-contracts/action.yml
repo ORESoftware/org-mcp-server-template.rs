@@ -17,6 +17,12 @@ runs:
         node-version: 22.16.0
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
+        repository: ORESoftware/mcp-rust-libs
+        ref: 487df19ec2542616924041bc244c5660c1ed0bf4
+        path: .mcp-contract-tools/shared
+        persist-credentials: false
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
         repository: ORESoftware/typespec-json-schema-validator
         ref: 97b9fda15c82e2972f0ee2fab3322553a4057783
         path: .mcp-contract-tools/validator
@@ -25,11 +31,14 @@ runs:
       shell: bash
       working-directory: .mcp-contract-tools/validator
       run: npm ci --omit=dev
-    - name: Test the wire verifier
+    - name: Test the shared and template wire verifiers
       shell: bash
       env:
         MCP_ACTION_ROOT: ${{ github.action_path }}/../../..
-      run: node --test "$MCP_ACTION_ROOT/tooling/mcp-wire.test.mjs"
+        MCP_SHARED_TOOLS_ROOT: ${{ github.workspace }}/.mcp-contract-tools/shared
+      run: |
+        node --test "$MCP_SHARED_TOOLS_ROOT/test"/org-mcp-*.test.mjs
+        node --test "$MCP_ACTION_ROOT/tooling"/mcp-wire*.test.mjs
     - name: Build the actual server with its existing lockfile
       shell: bash
       env:
@@ -40,6 +49,7 @@ runs:
       env:
         MCP_ACTION_ROOT: ${{ github.action_path }}/../../..
         MCP_VALIDATOR_ROOT: ${{ github.workspace }}/.mcp-contract-tools/validator
+        MCP_SHARED_TOOLS_ROOT: ${{ github.workspace }}/.mcp-contract-tools/shared
         MCP_BINARY: ${{ github.workspace }}/target/debug/${{ inputs.binary }}
         MCP_EXPECTED_REPOSITORY: ${{ github.repository }}
         MCP_CONTRACT_PROFILE: ${{ inputs.profile }}
