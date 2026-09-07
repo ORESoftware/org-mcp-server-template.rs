@@ -85,7 +85,8 @@ model OrgIdentityV2 {
 model SecurityBaselineV2 {
   mutations: "none";
   toolInputs: "closed_no_argument_schemas";
-  toolOutputBytesMax: 65536;
+  // Shared fleet provider outputs have a separate 512 KiB global ceiling.
+  toolOutputBytesMax: 524288;
   protocolStdoutOnly: true;
   remoteProtocol: "oauth_protected_streamable_http";
   credentialedHttp: "exact_host_no_proxy_no_redirect";
