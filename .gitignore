@@ -21,6 +21,7 @@
 *.env
 **/*.env
 env/dec
+env/dec/
 /env/dec/
 /env/enc/*
 !/env/enc/dev.env.enc
