@@ -1,6 +1,10 @@
 name: MCP peer contracts and real stdio conformance
 description: Verify independent TypeSpec/JSON Schema authorities, digest-bound IR, and six inherited read-only tools.
 inputs:
+  profile:
+    description: Explicit reviewed contract version (stdio-v1 or fleet-v2); never inferred from output.
+    required: false
+    default: stdio-v1
   binary:
     description: Cargo binary target to build and test (not a shell command).
     required: false
@@ -38,6 +42,7 @@ runs:
         MCP_VALIDATOR_ROOT: ${{ github.workspace }}/.mcp-contract-tools/validator
         MCP_BINARY: ${{ github.workspace }}/target/debug/${{ inputs.binary }}
         MCP_EXPECTED_REPOSITORY: ${{ github.repository }}
+        MCP_CONTRACT_PROFILE: ${{ inputs.profile }}
         MCP_CONTRACT_OUTPUT: ${{ runner.temp }}/mcp-peer-contracts
       run: |
         export MCP_TESTED_COMMIT="$(git rev-parse HEAD)"

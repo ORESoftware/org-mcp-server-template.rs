@@ -68,3 +68,31 @@ model SecurityBaseline {
   dependencyManagement: "zed-pkg_with_immutable_git_revisions";
   secrets: "sops_age_env_injection_never_cli_flags_or_logs";
 }
+
+// Explicit newer fleet contract; legacy servers do not silently qualify for it.
+model OrgIdentityV2 {
+  @minLength(1) @maxLength(256) organization: string;
+  @minLength(3) @maxLength(256) repository: string;
+  @minLength(1) @maxLength(256) service: string;
+  @minLength(1) @maxLength(256) package: string;
+  @minLength(1) version: string;
+  protocol: "2025-11-25";
+  @minItems(2) @maxItems(2) transports: string[];
+  @minItems(6) @maxItems(6) clients: string[];
+  accessMode: "read_only";
+}
+
+model SecurityBaselineV2 {
+  mutations: "none";
+  toolInputs: "closed_no_argument_schemas";
+  toolOutputBytesMax: 65536;
+  protocolStdoutOnly: true;
+  remoteProtocol: "oauth_protected_streamable_http";
+  credentialedHttp: "exact_host_no_proxy_no_redirect";
+  logs: "structured_json_stderr";
+  telemetry: "ores-otel_bounded_low_cardinality";
+  authentication: "shared-auth_when_a_product_boundary_requires_it";
+  authorization: "product_local_never_inferred_from_identity";
+  dependencyManagement: "zed-pkg_with_immutable_git_revisions";
+  secrets: "sops_age_env_injection_never_cli_flags_or_logs";
+}

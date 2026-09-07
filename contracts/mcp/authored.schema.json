@@ -1,104 +1,15 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://oresoftware.github.io/mcp/contracts/baseline-v1.schema.json",
-  "$defs": {
-    "NoArguments": {"type":"object","properties":{},"unevaluatedProperties":{"not":{}}},
-    "OrgIdentity": {
-      "type":"object",
-      "properties": {
-        "organization":{"type":"string","minLength":1,"maxLength":256},
-        "repository":{"type":"string","minLength":3,"maxLength":256},
-        "service":{"type":"string","minLength":1,"maxLength":256},
-        "package":{"type":"string","minLength":1,"maxLength":256},
-        "version":{"type":"string","minLength":1},
-        "transport":{"type":"string","const":"stdio"},
-        "accessMode":{"type":"string","const":"read_only"}
-      },
-      "required":["organization","repository","service","package","version","transport","accessMode"],
-      "unevaluatedProperties":{"not":{}}
-    },
-    "ZedDependencyGraph": {
-      "type":"object",
-      "properties": {
-        "organization":{"type":"string","minLength":1},
-        "repository":{"type":"string","minLength":3},
-        "package":{"type":"string","minLength":1},
-        "materializationDirectory":{"type":"string","const":".vendor/.zed"},
-        "dependencies":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":128},
-        "submoduleInterop": {
-          "type":"object",
-          "properties": {
-            "gitAuthority":{"type":"string","const":"exact committed checkout and source transport"},
-            "zedAuthority":{"type":"string","const":"package identity, dependency intent, materialization, and lock provenance"},
-            "adoptionCommand":{"type":"string","const":"zed overtake --git-submodules"}
-          },
-          "required":["gitAuthority","zedAuthority","adoptionCommand"],
-          "unevaluatedProperties":{"not":{}}
-        }
-      },
-      "required":["organization","repository","package","materializationDirectory","dependencies","submoduleInterop"],
-      "unevaluatedProperties":{"not":{}}
-    },
-    "TelemetryStatus": {
-      "type":"object",
-      "properties": {
-        "implementation":{"type":"string","minLength":1},
-        "revision":{"type":"string","minLength":40,"maxLength":40},
-        "stdoutReservedForMcp":{"type":"boolean","const":true},
-        "stderrJsonLogging":{"type":"boolean","const":true},
-        "subscriberInstalled":{"type":"boolean"},
-        "exporters":{"type":"object","properties":{"traces":{"type":"boolean"},"metrics":{"type":"boolean"},"logs":{"type":"boolean"}},"required":["traces","metrics","logs"],"unevaluatedProperties":{"not":{}}},
-        "attributes":{"type":"string","const":"bounded_low_cardinality_no_credentials_or_payloads"}
-      },
-      "required":["implementation","revision","stdoutReservedForMcp","stderrJsonLogging","subscriberInstalled","exporters","attributes"],
-      "unevaluatedProperties":{"not":{}}
-    },
-    "SharedAuthPolicy": {
-      "type":"object",
-      "properties": {
-        "configured":{"type":"boolean"},
-        "authority":{"type":"string","const":"shared-auth"},
-        "ordinaryVerification":{"type":"string","const":"local_ES256_JWKS_exact_issuer_audience_client_realm"},
-        "immediateRevocation":{"type":"string","const":"protected_server_to_server_introspection_only"},
-        "productAuthorization":{"type":"string","const":"owning_product_database_and_policy"},
-        "realms":{"type":"string","const":"admin_and_customer_are_independent"},
-        "outcomes":{"type":"array","items":{"type":"string"},"minItems":4,"maxItems":4},
-        "credentialsAcceptedByThisTool":{"type":"boolean","const":false}
-      },
-      "required":["configured","authority","ordinaryVerification","immediateRevocation","productAuthorization","realms","outcomes","credentialsAcceptedByThisTool"],
-      "unevaluatedProperties":{"not":{}}
-    },
-    "EnvironmentPolicy": {
-      "type":"object",
-      "properties": {
-        "encryptedGlob":{"type":"string","const":"env/enc/*.env.enc"},
-        "decryptedGlob":{"type":"string","const":"env/dec/*.env"},
-        "cipher":{"type":"string","const":"sops_age"},
-        "taskRunner":{"type":"string","const":"just"},
-        "toolchain":{"type":"string","const":"nix"},
-        "plaintextTracked":{"type":"boolean","const":false},
-        "privateAgeIdentityTracked":{"type":"boolean","const":false},
-        "secretValuesLogged":{"type":"boolean","const":false}
-      },
-      "required":["encryptedGlob","decryptedGlob","cipher","taskRunner","toolchain","plaintextTracked","privateAgeIdentityTracked","secretValuesLogged"],
-      "unevaluatedProperties":{"not":{}}
-    },
-    "SecurityBaseline": {
-      "type":"object",
-      "properties": {
-        "mutations":{"type":"string","const":"none"},
-        "toolInputs":{"type":"string","const":"closed_no_argument_schemas"},
-        "toolOutputBytesMax":{"type":"number","const":65536},
-        "protocolStdoutOnly":{"type":"boolean","const":true},
-        "logs":{"type":"string","const":"structured_json_stderr"},
-        "telemetry":{"type":"string","const":"ores-otel_bounded_low_cardinality"},
-        "authentication":{"type":"string","const":"shared-auth_when_a_product_boundary_requires_it"},
-        "authorization":{"type":"string","const":"product_local_never_inferred_from_identity"},
-        "dependencyManagement":{"type":"string","const":"zed-pkg_with_immutable_git_revisions"},
-        "secrets":{"type":"string","const":"sops_age_env_injection_never_cli_flags_or_logs"}
-      },
-      "required":["mutations","toolInputs","toolOutputBytesMax","protocolStdoutOnly","logs","telemetry","authentication","authorization","dependencyManagement","secrets"],
-      "unevaluatedProperties":{"not":{}}
-    }
-  }
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://oresoftware.github.io/mcp/contracts/baseline-v1.schema.json",
+ "$defs":{
+  "NoArguments":{"type":"object","properties":{},"unevaluatedProperties":{"not":{}}},
+  "OrgIdentity":{"type":"object","properties":{"organization":{"type":"string","minLength":1,"maxLength":256},"repository":{"type":"string","minLength":3,"maxLength":256},"service":{"type":"string","minLength":1,"maxLength":256},"package":{"type":"string","minLength":1,"maxLength":256},"version":{"type":"string","minLength":1},"transport":{"type":"string","const":"stdio"},"accessMode":{"type":"string","const":"read_only"}},"required":["organization","repository","service","package","version","transport","accessMode"],"unevaluatedProperties":{"not":{}}},
+  "ZedDependencyGraph":{"type":"object","properties":{"organization":{"type":"string","minLength":1},"repository":{"type":"string","minLength":3},"package":{"type":"string","minLength":1},"materializationDirectory":{"type":"string","const":".vendor/.zed"},"dependencies":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":128},"submoduleInterop":{"type":"object","properties":{"gitAuthority":{"type":"string","const":"exact committed checkout and source transport"},"zedAuthority":{"type":"string","const":"package identity, dependency intent, materialization, and lock provenance"},"adoptionCommand":{"type":"string","const":"zed overtake --git-submodules"}},"required":["gitAuthority","zedAuthority","adoptionCommand"],"unevaluatedProperties":{"not":{}}}},"required":["organization","repository","package","materializationDirectory","dependencies","submoduleInterop"],"unevaluatedProperties":{"not":{}}},
+  "TelemetryStatus":{"type":"object","properties":{"implementation":{"type":"string","minLength":1},"revision":{"type":"string","minLength":40,"maxLength":40},"stdoutReservedForMcp":{"type":"boolean","const":true},"stderrJsonLogging":{"type":"boolean","const":true},"subscriberInstalled":{"type":"boolean"},"exporters":{"type":"object","properties":{"traces":{"type":"boolean"},"metrics":{"type":"boolean"},"logs":{"type":"boolean"}},"required":["traces","metrics","logs"],"unevaluatedProperties":{"not":{}}},"attributes":{"type":"string","const":"bounded_low_cardinality_no_credentials_or_payloads"}},"required":["implementation","revision","stdoutReservedForMcp","stderrJsonLogging","subscriberInstalled","exporters","attributes"],"unevaluatedProperties":{"not":{}}},
+  "SharedAuthPolicy":{"type":"object","properties":{"configured":{"type":"boolean"},"authority":{"type":"string","const":"shared-auth"},"ordinaryVerification":{"type":"string","const":"local_ES256_JWKS_exact_issuer_audience_client_realm"},"immediateRevocation":{"type":"string","const":"protected_server_to_server_introspection_only"},"productAuthorization":{"type":"string","const":"owning_product_database_and_policy"},"realms":{"type":"string","const":"admin_and_customer_are_independent"},"outcomes":{"type":"array","items":{"type":"string"},"minItems":4,"maxItems":4},"credentialsAcceptedByThisTool":{"type":"boolean","const":false}},"required":["configured","authority","ordinaryVerification","immediateRevocation","productAuthorization","realms","outcomes","credentialsAcceptedByThisTool"],"unevaluatedProperties":{"not":{}}},
+  "EnvironmentPolicy":{"type":"object","properties":{"encryptedGlob":{"type":"string","const":"env/enc/*.env.enc"},"decryptedGlob":{"type":"string","const":"env/dec/*.env"},"cipher":{"type":"string","const":"sops_age"},"taskRunner":{"type":"string","const":"just"},"toolchain":{"type":"string","const":"nix"},"plaintextTracked":{"type":"boolean","const":false},"privateAgeIdentityTracked":{"type":"boolean","const":false},"secretValuesLogged":{"type":"boolean","const":false}},"required":["encryptedGlob","decryptedGlob","cipher","taskRunner","toolchain","plaintextTracked","privateAgeIdentityTracked","secretValuesLogged"],"unevaluatedProperties":{"not":{}}},
+  "SecurityBaseline":{"type":"object","properties":{"mutations":{"type":"string","const":"none"},"toolInputs":{"type":"string","const":"closed_no_argument_schemas"},"toolOutputBytesMax":{"type":"number","const":65536},"protocolStdoutOnly":{"type":"boolean","const":true},"logs":{"type":"string","const":"structured_json_stderr"},"telemetry":{"type":"string","const":"ores-otel_bounded_low_cardinality"},"authentication":{"type":"string","const":"shared-auth_when_a_product_boundary_requires_it"},"authorization":{"type":"string","const":"product_local_never_inferred_from_identity"},"dependencyManagement":{"type":"string","const":"zed-pkg_with_immutable_git_revisions"},"secrets":{"type":"string","const":"sops_age_env_injection_never_cli_flags_or_logs"}},"required":["mutations","toolInputs","toolOutputBytesMax","protocolStdoutOnly","logs","telemetry","authentication","authorization","dependencyManagement","secrets"],"unevaluatedProperties":{"not":{}}},
+  "OrgIdentityV2":{"type":"object","properties":{"organization":{"type":"string","minLength":1,"maxLength":256},"repository":{"type":"string","minLength":3,"maxLength":256},"service":{"type":"string","minLength":1,"maxLength":256},"package":{"type":"string","minLength":1,"maxLength":256},"version":{"type":"string","minLength":1},"protocol":{"type":"string","const":"2025-11-25"},"transports":{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2},"clients":{"type":"array","items":{"type":"string"},"minItems":6,"maxItems":6},"accessMode":{"type":"string","const":"read_only"}},"required":["organization","repository","service","package","version","protocol","transports","clients","accessMode"],"unevaluatedProperties":{"not":{}}},
+  "SecurityBaselineV2":{"type":"object","properties":{"mutations":{"type":"string","const":"none"},"toolInputs":{"type":"string","const":"closed_no_argument_schemas"},"toolOutputBytesMax":{"type":"number","const":65536},"protocolStdoutOnly":{"type":"boolean","const":true},"remoteProtocol":{"type":"string","const":"oauth_protected_streamable_http"},"credentialedHttp":{"type":"string","const":"exact_host_no_proxy_no_redirect"},"logs":{"type":"string","const":"structured_json_stderr"},"telemetry":{"type":"string","const":"ores-otel_bounded_low_cardinality"},"authentication":{"type":"string","const":"shared-auth_when_a_product_boundary_requires_it"},"authorization":{"type":"string","const":"product_local_never_inferred_from_identity"},"dependencyManagement":{"type":"string","const":"zed-pkg_with_immutable_git_revisions"},"secrets":{"type":"string","const":"sops_age_env_injection_never_cli_flags_or_logs"}},"required":["mutations","toolInputs","toolOutputBytesMax","protocolStdoutOnly","remoteProtocol","credentialedHttp","logs","telemetry","authentication","authorization","dependencyManagement","secrets"],"unevaluatedProperties":{"not":{}}}
+ }
 }

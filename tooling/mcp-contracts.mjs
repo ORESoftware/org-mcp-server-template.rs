@@ -3,12 +3,15 @@ import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { exerciseServer } from './mcp-wire.mjs';
+import { contractProfile } from './mcp-profiles.mjs';
 
 // Fixed CI entrypoint, not a second option parser. The action owns these inputs.
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const validatorRoot = process.env.MCP_VALIDATOR_ROOT;
 const binary = process.env.MCP_BINARY;
 const expectedRepository = process.env.MCP_EXPECTED_REPOSITORY;
+const profileName = process.env.MCP_CONTRACT_PROFILE ?? 'stdio-v1';
+const profile = contractProfile(profileName);
 const outputBase = process.env.MCP_CONTRACT_OUTPUT;
 assert(validatorRoot && binary && expectedRepository && outputBase, 'action configuration is incomplete');
 const api = await import(pathToFileURL(join(resolve(validatorRoot), 'src/index.mjs')).href);
@@ -57,6 +60,10 @@ function verdict(model, instance) {
   });
 }
 function validate(model, instance) {
+  if (model === 'OrgIdentityV2') {
+    assert.deepEqual(instance.transports, ['stdio', 'streamable_http']);
+    assert.deepEqual(instance.clients, ['cursor', 'openai_chatgpt', 'anthropic_claude', 'gemini', 'grok', 'qwen']);
+  }
   assert.deepEqual(verdict(model, instance), [true, true], `${model} runtime response violated peer contracts`);
   assert.deepEqual(verdict(model, { ...instance, __unexpected_contract_field__: true }), [false, false], `${model} is not closed`);
 }
@@ -69,10 +76,11 @@ function validateInputSchema(schema) {
     assert.equal(api.validateInstance({ schema, instance, resolver, base }).valid, expected, 'advertised input schema is not closed/no-argument');
   }
 }
-const runtime = await exerciseServer({ binary: resolve(binary), expectedRepository, validate, validateInputSchema });
+const runtime = await exerciseServer({ binary: resolve(binary), expectedRepository, validate, validateInputSchema, ...profile });
 await writeFile(join(outputDir, 'runtime-evidence.json'), JSON.stringify({
   schema: 'ores.mcp-baseline-conformance/v1',
   repository: expectedRepository,
+  profile: profileName,
   commit: process.env.MCP_TESTED_COMMIT,
   scope: 'six inherited read-only stdio tools; not product authorization or full compiler certification',
   receiptRunId: report.runId, contractIrId: ir.irId,

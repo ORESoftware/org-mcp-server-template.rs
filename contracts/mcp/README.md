@@ -37,3 +37,8 @@ runtime evidence with the tested Git revision. Every execution gets a fresh
 subdirectory, so a failed rerun cannot reuse an old successful runtime artifact.
 Generated evidence is not editable contract authority and must not be copied into
 an authored source to make a test pass.
+
+Profiles are explicit: `stdio-v1` is the original six-tool baseline; `fleet-v2`
+requires the 2025-11-25 multi-transport identity and the newer exact-host OAuth
+security posture. Both have separate peer declarations; selecting the newer
+profile never accepts the legacy shape. Neither profile executes remote tools.

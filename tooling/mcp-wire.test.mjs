@@ -58,3 +58,13 @@ test('malformed stderr is rejected', async () => {
   const rpc = new RpcProcess(process.execPath, { args: ['-e', `process.stdin.on('data',()=>console.error('not structured'))`], timeoutMs: 1000 });
   try { await assert.rejects(rpc.request('ping')); } finally { await rpc.stop(); }
 });
+
+const { contractProfile } = await import('./mcp-profiles.mjs');
+test('profiles do not downgrade newer fleet identity or security', () => {
+  assert.equal(contractProfile('stdio-v1').models.org_identity, 'OrgIdentity');
+  assert.equal(contractProfile('fleet-v2').models.org_identity, 'OrgIdentityV2');
+  assert.equal(contractProfile('fleet-v2').models.security_baseline, 'SecurityBaselineV2');
+  assert.equal(contractProfile('fleet-v2').protocolVersion, '2025-11-25');
+  assert.throws(() => contractProfile('__proto__'));
+  assert.throws(() => contractProfile(undefined));
+});

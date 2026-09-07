@@ -155,14 +155,14 @@ export class RpcProcess {
   }
 }
 
-export async function exerciseServer({ binary, expectedRepository, validate, validateInputSchema, processOptions }) {
+export async function exerciseServer({ binary, expectedRepository, validate, validateInputSchema, processOptions, models = TOOL_MODELS, protocolVersion = '2025-03-26' }) {
   const rpc = new RpcProcess(binary, processOptions);
   let calls = 0;
   try {
     // Reject an oversized frame and recover at the next newline before initialization.
     rpc.child.stdin.write(`${' '.repeat(MAX_LINE + 1)}\n`);
     const initialized = await rpc.request('initialize', {
-      protocolVersion: '2025-03-26', capabilities: {},
+      protocolVersion, capabilities: {},
       clientInfo: { name: 'peer-contract-conformance', version: '1.0.0' },
     });
     assert(initialized.result?.capabilities?.tools, 'tools capability missing');
@@ -171,7 +171,7 @@ export async function exerciseServer({ binary, expectedRepository, validate, val
     assert(Array.isArray(listed.result?.tools), 'tool catalog missing');
     const tools = new Map(listed.result.tools.map((tool) => [tool.name, tool]));
     assert.equal(tools.size, listed.result.tools.length, 'duplicate tool names');
-    for (const [name, model] of Object.entries(TOOL_MODELS)) {
+    for (const [name, model] of Object.entries(models)) {
       const tool = tools.get(name);
       assert(tool, `missing inherited tool ${name}`);
       validateInputSchema(tool.inputSchema);
@@ -193,6 +193,6 @@ export async function exerciseServer({ binary, expectedRepository, validate, val
     assertRejected(await rpc.request('tools/call', { name: '__unknown_contract_tool__', arguments: {} }));
     calls++;
     await rpc.finish();
-    return { tools: Object.keys(TOOL_MODELS).length, calls, stdoutBytes: rpc.bytes.stdout, stderrBytes: rpc.bytes.stderr };
+    return { tools: Object.keys(models).length, calls, stdoutBytes: rpc.bytes.stdout, stderrBytes: rpc.bytes.stderr };
   } finally { await rpc.stop(); }
 }
