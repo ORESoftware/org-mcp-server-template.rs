@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oresoftware.com/contracts/org-mcp-template/v1",
+  "$defs": {
+    "NoArguments": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "OrgIdentity": {
+      "type": "object",
+      "properties": {
+        "organization": { "type": "string", "minLength": 1 },
+        "repository": { "type": "string", "minLength": 1 },
+        "service": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "transport": { "type": "string", "const": "stdio" },
+        "accessMode": { "type": "string", "const": "read_only" }
+      },
+      "required": ["organization", "repository", "service", "package", "version", "transport", "accessMode"],
+      "additionalProperties": false
+    }
+  }
+}

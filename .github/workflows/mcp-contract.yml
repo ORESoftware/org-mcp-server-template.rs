@@ -1,0 +1,59 @@
+name: MCP peer contracts and implementation
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+permissions:
+  contents: read
+jobs:
+  peer-contract-conformance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ORESoftware/mcp-rust-libs
+          ref: 56d102dc0b37f2d3b4b602f6ef268945942a21a5
+          path: .contract-tools
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ORESoftware/typespec-json-schema-validator
+          ref: e00f586e639e505d83ab1058248c0e15e504c15c
+          path: .contract-validator
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.16.0
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+          components: rustfmt, clippy
+      - name: Install pinned compiler and validator dependencies
+        run: |
+          npm ci --prefix .contract-validator
+          test ! -e node_modules
+          ln -s .contract-validator/node_modules node_modules
+      - name: Test shared runner
+        run: node --test .contract-tools/test/org-mcp-contract.test.mjs
+      - name: Check Rust and build actual template binary
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo test --locked --all-targets
+          cargo build --locked --bin org-mcp-server
+      - name: Fresh peer parity, negative controls, IR and implementation conformance
+        run: node scripts/check-mcp-contract.mjs
+      - name: Preserve current-run evidence (failed is not admission)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mcp-contract-${{ github.sha }}
+          path: artifacts/mcp-contract/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Neither authored authority was rewritten
+        run: git diff --exit-code -- contracts Cargo.toml Cargo.lock src
