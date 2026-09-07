@@ -30,3 +30,9 @@ env/dec
 keys.txt
 sops-private*.txt
 # END ores-sops dotenv policy
+
+# Disposable pinned contract tooling, compiler dependencies, and run evidence.
+/.contract-tools/
+/.contract-validator/
+/node_modules/
+/artifacts/mcp-contract/
