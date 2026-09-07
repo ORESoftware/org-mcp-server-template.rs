@@ -1,0 +1,52 @@
+name: MCP peer contracts and real stdio conformance
+description: Verify independent TypeSpec/JSON Schema authorities, digest-bound IR, and six inherited read-only tools.
+inputs:
+  binary:
+    description: Cargo binary target to build and test (not a shell command).
+    required: false
+    default: org-mcp-server
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: 22.16.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        repository: ORESoftware/typespec-json-schema-validator
+        ref: 97b9fda15c82e2972f0ee2fab3322553a4057783
+        path: .mcp-contract-tools/validator
+        persist-credentials: false
+    - name: Install lockfile-pinned contract compiler
+      shell: bash
+      working-directory: .mcp-contract-tools/validator
+      run: npm ci --omit=dev
+    - name: Test the wire verifier
+      shell: bash
+      env:
+        MCP_ACTION_ROOT: ${{ github.action_path }}/../../..
+      run: node --test "$MCP_ACTION_ROOT/tooling/mcp-wire.test.mjs"
+    - name: Build the actual server with its existing lockfile
+      shell: bash
+      env:
+        MCP_BIN_NAME: ${{ inputs.binary }}
+      run: cargo build --locked --bin "$MCP_BIN_NAME"
+    - name: Verify parity, exact-source admission, and real stdio behavior
+      shell: bash
+      env:
+        MCP_ACTION_ROOT: ${{ github.action_path }}/../../..
+        MCP_VALIDATOR_ROOT: ${{ github.workspace }}/.mcp-contract-tools/validator
+        MCP_BINARY: ${{ github.workspace }}/target/debug/${{ inputs.binary }}
+        MCP_EXPECTED_REPOSITORY: ${{ github.repository }}
+        MCP_CONTRACT_OUTPUT: ${{ runner.temp }}/mcp-peer-contracts
+      run: |
+        export MCP_TESTED_COMMIT="$(git rev-parse HEAD)"
+        node "$MCP_ACTION_ROOT/tooling/mcp-contracts.mjs"
+    - name: Preserve parity and runtime evidence
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: mcp-peer-contract-evidence
+        path: ${{ runner.temp }}/mcp-peer-contracts
+        if-no-files-found: error
+        retention-days: 14
