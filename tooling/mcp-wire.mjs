@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { parseStrictJson, wireJsonPolicy, sharedMcpRevision, sharedJsonSha256 } from './mcp-shared-json.mjs';
+import { admitInitialization, admitToolResult, assertReadOnlyAnnotations, bindSessionIdentity, collectToolCatalog, SESSION_POLICY } from './mcp-wire-session.mjs';
 
 export const TOOL_MODELS = Object.freeze({
   org_identity: 'OrgIdentity',
@@ -31,7 +32,7 @@ export function decodeResult(frame) {
   assertFrame(frame);
   assert(!Object.hasOwn(frame, 'error'), 'valid tool call returned a protocol error');
   const result = frame.result;
-  assert(result && result.isError !== true, 'valid tool call returned an execution error');
+  admitToolResult(result);
   assert.equal(result.content?.length, 1, 'one JSON text block required');
   assert.equal(result.content[0].type, 'text');
   assert.equal(typeof result.content[0].text, 'string');
@@ -165,19 +166,18 @@ export async function exerciseServer({ binary, expectedRepository, validate, val
       protocolVersion, capabilities: {},
       clientInfo: { name: 'peer-contract-conformance', version: '1.0.0' },
     });
-    assert(initialized.result?.capabilities?.tools, 'tools capability missing');
+    const session = admitInitialization(initialized, protocolVersion);
     rpc.notify('notifications/initialized');
-    const listed = await rpc.request('tools/list');
-    assert(Array.isArray(listed.result?.tools), 'tool catalog missing');
-    const tools = new Map(listed.result.tools.map((tool) => [tool.name, tool]));
-    assert.equal(tools.size, listed.result.tools.length, 'duplicate tool names');
+    const { tools, pages } = await collectToolCatalog((method, params) => rpc.request(method, params));
     for (const [name, model] of Object.entries(models)) {
       const tool = tools.get(name);
       assert(tool, `missing inherited tool ${name}`);
+      if (protocolVersion === '2025-11-25') assertReadOnlyAnnotations(tool);
       validateInputSchema(tool.inputSchema);
       validate('NoArguments', {});
       const value = decodeResult(await rpc.request('tools/call', { name, arguments: {} }));
       validate(model, value);
+      if (name === 'org_identity') bindSessionIdentity(session, value);
       if (name === 'org_identity' || name === 'zed_dependency_graph') assertIdentity(value, expectedRepository);
       if (name === 'zed_dependency_graph') assert.equal(new Set(value.dependencies).size, value.dependencies.length);
       if (name === 'shared_auth_policy') {
@@ -192,8 +192,11 @@ export async function exerciseServer({ binary, expectedRepository, validate, val
     }
     assertRejected(await rpc.request('tools/call', { name: '__unknown_contract_tool__', arguments: {} }));
     calls++;
+    const ping = await rpc.request('ping');
+    assert(!Object.hasOwn(ping, 'error') && ping.result && typeof ping.result === 'object' && !Array.isArray(ping.result), 'session did not survive negative calls');
     await rpc.finish();
     return { tools: Object.keys(models).length, calls, stdoutBytes: rpc.bytes.stdout, stderrBytes: rpc.bytes.stderr,
+      sessionPolicy: SESSION_POLICY, negotiatedProtocol: session.protocolVersion, catalogPages: pages, catalogTools: tools.size, recoveryPings: 1,
       wireJsonPolicy, sharedMcpRevision, sharedJsonSha256 };
   } finally { await rpc.stop(); }
 }
