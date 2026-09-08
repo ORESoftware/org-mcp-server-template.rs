@@ -30,3 +30,7 @@ env/dec
 keys.txt
 sops-private*.txt
 # END ores-sops dotenv policy
+
+# Local temporary directories and repository-owned worktrees
+tmp/
+temp/
