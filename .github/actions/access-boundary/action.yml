@@ -1,0 +1,28 @@
+name: MCP access boundary
+description: Probe an explicitly declared stdio catalog and reject identity-argument privilege spoofing; not an authentication certificate.
+inputs:
+  binary:
+    description: Path to the already-built MCP binary in the caller workspace
+    required: true
+  organization:
+    description: Expected compiled organization identity
+    required: true
+  repository:
+    description: Expected compiled owner/repository identity
+    required: true
+  expected-tools-json:
+    description: Complete reviewed tools/list catalog, including all domain tools, as a JSON array
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Exercise the real stdio access boundary
+      shell: bash
+      env:
+        MCP_BINARY: ${{ inputs.binary }}
+        MCP_EXPECT_ORGANIZATION: ${{ inputs.organization }}
+        MCP_EXPECT_REPOSITORY: ${{ inputs.repository }}
+        MCP_EXPECT_TOOLS: ${{ inputs.expected-tools-json }}
+      run: |
+        test -n "$MCP_EXPECT_TOOLS"
+        node "$GITHUB_ACTION_PATH/../../../scripts/access-boundary.mjs"
