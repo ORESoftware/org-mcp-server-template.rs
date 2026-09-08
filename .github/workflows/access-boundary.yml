@@ -1,0 +1,30 @@
+name: mcp-access-boundary
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Test adversarial probe fixtures
+        run: node --test test/access-boundary.test.mjs
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+      - name: Build the actual template binary from the locked graph
+        run: cargo build --locked --bin org-mcp-server
+      - uses: ./.github/actions/access-boundary
+        with:
+          binary: target/debug/org-mcp-server
+          organization: ORESoftware
+          repository: ORESoftware/org-mcp-server-template.rs
+          expected-tools-json: '["environment_policy","org_identity","security_baseline","shared_auth_policy","telemetry_status","zed_dependency_graph"]'
