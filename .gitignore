@@ -21,6 +21,7 @@
 *.env
 **/*.env
 env/dec
+env/dec/
 /env/dec/
 /env/enc/*
 !/env/enc/dev.env.enc
@@ -34,3 +35,9 @@ sops-private*.txt
 # Local temporary directories and repository-owned worktrees
 tmp/
 temp/
+
+# Disposable pinned contract tooling, compiler dependencies, and run evidence.
+/.contract-tools/
+/.contract-validator/
+/node_modules/
+/artifacts/mcp-contract/

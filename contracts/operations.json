@@ -1,0 +1,26 @@
+{
+  "schema": "ores.mcp-tool-conformance/v1",
+  "protocolVersion": "2025-11-25",
+  "coverage": "declared-tools-only",
+  "tools": [{
+    "name": "org_identity",
+    "input": "NoArguments",
+    "output": "OrgIdentity",
+    "encoding": "json_text",
+    "validArguments": [{}],
+    "invalidArguments": [
+      {"unexpected": true},
+      {"organization": "another-org"},
+      {"token": "fixture-not-a-credential"}
+    ],
+    "expectedOutput": {
+      "organization": "ORESoftware",
+      "repository": "ORESoftware/org-mcp-server-template.rs",
+      "service": "org-mcp-server-template",
+      "package": "org-mcp-server-template",
+      "version": "0.1.0",
+      "transport": "stdio",
+      "accessMode": "read_only"
+    }
+  }]
+}
