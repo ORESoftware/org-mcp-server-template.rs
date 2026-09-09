@@ -24,13 +24,16 @@ runs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         repository: ORESoftware/typespec-json-schema-validator
-        ref: 97b9fda15c82e2972f0ee2fab3322553a4057783
+        ref: 2281843126ab644607b11cf8281d84f382d68dfc
         path: .mcp-contract-tools/validator
         persist-credentials: false
-    - name: Install lockfile-pinned contract compiler
+    - name: Verify and install lockfile-pinned contract compiler
       shell: bash
       working-directory: .mcp-contract-tools/validator
-      run: npm ci --omit=dev
+      run: |
+        test "$(git rev-parse HEAD)" = 2281843126ab644607b11cf8281d84f382d68dfc
+        git diff --exit-code HEAD
+        npm ci --omit=dev
     - name: Test the shared and template wire verifiers
       shell: bash
       env:
@@ -57,6 +60,9 @@ runs:
       run: |
         export MCP_TESTED_COMMIT="$(git rev-parse HEAD)"
         node "$MCP_ACTION_ROOT/tooling/mcp-contracts.mjs"
+    - name: Preserve validator source
+      shell: bash
+      run: git -C .mcp-contract-tools/validator diff --exit-code HEAD
     - name: Preserve parity and runtime evidence
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
