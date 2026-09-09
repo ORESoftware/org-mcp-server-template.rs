@@ -24,7 +24,7 @@ try {
     node: process.version,
     rustc: execFileSync('rustc', ['--version'], { encoding: 'utf8' }).trim(),
   };
-  assert.equal(toolchains.validator, '4473504c4c9d2831d825919f70c03994d8ce01d2');
+  assert.equal(toolchains.validator, '2281843126ab644607b11cf8281d84f382d68dfc');
   assert.equal(toolchains.runner, '487df19ec2542616924041bc244c5660c1ed0bf4');
   const work = await mkdtemp(join(artifacts, 'run-'));
   const options = {
