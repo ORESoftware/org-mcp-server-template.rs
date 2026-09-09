@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ORESoftware/typespec-json-schema-validator
-          ref: 4473504c4c9d2831d825919f70c03994d8ce01d2
+          ref: 2281843126ab644607b11cf8281d84f382d68dfc
           path: .contract-validator
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -39,7 +39,7 @@ jobs:
           components: rustfmt, clippy
       - name: Verify and install pinned compiler dependencies
         run: |
-          test "$(git -C .contract-validator rev-parse HEAD)" = 4473504c4c9d2831d825919f70c03994d8ce01d2
+          test "$(git -C .contract-validator rev-parse HEAD)" = 2281843126ab644607b11cf8281d84f382d68dfc
           git -C .contract-validator diff --exit-code HEAD
           npm ci --prefix .contract-validator
           test ! -e node_modules
