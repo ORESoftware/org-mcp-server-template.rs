@@ -24,14 +24,14 @@ runs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         repository: ORESoftware/typespec-json-schema-validator
-        ref: 4473504c4c9d2831d825919f70c03994d8ce01d2
+        ref: 2281843126ab644607b11cf8281d84f382d68dfc
         path: .mcp-contract-tools/validator
         persist-credentials: false
     - name: Verify and install lockfile-pinned contract compiler
       shell: bash
       working-directory: .mcp-contract-tools/validator
       run: |
-        test "$(git rev-parse HEAD)" = 4473504c4c9d2831d825919f70c03994d8ce01d2
+        test "$(git rev-parse HEAD)" = 2281843126ab644607b11cf8281d84f382d68dfc
         git diff --exit-code HEAD
         npm ci --omit=dev
     - name: Test the shared and template wire verifiers
