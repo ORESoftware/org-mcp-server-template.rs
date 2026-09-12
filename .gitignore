@@ -41,3 +41,6 @@ temp/
 /.contract-validator/
 /node_modules/
 /artifacts/mcp-contract/
+
+# typespec-json-schema-validator comparison evidence (generated; never an authority)
+.typespec-json-schema-validator/
