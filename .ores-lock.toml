@@ -18,21 +18,21 @@ purpose = "Select one declared lock profile at process startup."
 [[env]]
 key = "FIDUCIA_BASE_URL"
 kind = "url"
-required = false
+required = true
 secret = false
 purpose = "Fiducia lease authority endpoint."
 
 [[env]]
 key = "FIDUCIA_AUTH_TOKEN"
 kind = "string"
-required = false
+required = true
 secret = true
 purpose = "Credential for the Fiducia lease authority."
 
 [[env]]
 key = "DATABASE_URL"
 kind = "string"
-required = false
+required = true
 secret = true
 purpose = "PostgreSQL connection string used by the advisory-lock provider."
 
