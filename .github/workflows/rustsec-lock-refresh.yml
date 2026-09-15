@@ -1,0 +1,53 @@
+name: rustsec-lock-refresh
+
+on:
+  pull_request:
+    paths:
+      - Cargo.lock
+      - Cargo.toml
+      - .github/workflows/rustsec-lock-refresh.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          show-progress: false
+      - name: Verify exact head
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$expected"
+      - name: Install Rust 1.88.0
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: 1.88.0
+      - name: Generate minimal RustSec lock refresh
+        run: |
+          set -euo pipefail
+          cargo update -p rustls --precise 0.23.45
+          cargo metadata --locked --format-version 1 >/dev/null
+          git diff --check -- Cargo.lock
+          git diff -- Cargo.lock
+      - name: Audit generated lock
+        run: |
+          cargo install cargo-audit --locked --version 0.22.2
+          cargo audit --deny warnings
+      - name: Upload generated Cargo.lock
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rustls-lock-${{ github.event.pull_request.head.sha || github.sha }}
+          path: Cargo.lock
+          if-no-files-found: error
+          retention-days: 1
