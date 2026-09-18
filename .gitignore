@@ -44,3 +44,23 @@ temp/
 
 # typespec-json-schema-validator comparison evidence (generated; never an authority)
 .typespec-json-schema-validator/
+
+# machine-local symlink to ORESoftware/my-ai AGENTS.md; never committed
+.ores/
+
+# ORESoftware SOPS dotenv ignore contract (ORESoftware/.github docs/sops-environment-standard.md)
+*.env
+*/*.env
+*/**/*.env
+.env.*
+*.env.*
+!.env.example
+
+/env/dec/
+
+/env/enc/*
+!/env/enc/dev.env.enc
+!/env/enc/prod.env.enc
+
+# build output (DEN-3945 conformance): never tracked
+target/
